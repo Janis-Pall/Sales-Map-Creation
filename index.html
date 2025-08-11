@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company Delivery Map Creation</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="title-container">
+                    <div class="title-row">
+                        <h1><i class="fas fa-globe"></i> <span id="mainTitle">Company Delivery Map Creation</span></h1>
+                        <button id="editTitlesBtn" class="btn-edit-titles" title="Edit Titles">
+                            <i class="fas fa-edit"></i> Edit Titles
+                        </button>
+                    </div>
+                    <p><span id="subtitle">Global Supply Chain Network</span></p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Title Edit Modal -->
+        <div id="titleEditModal" class="modal-overlay" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3><i class="fas fa-edit"></i> Edit Map Titles</h3>
+                    <button id="closeTitleModal" class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="mainTitleInput">Main Title:</label>
+                        <input type="text" id="mainTitleInput" placeholder="Enter main title..." maxlength="100">
+                    </div>
+                    <div class="form-group">
+                        <label for="subtitleInput">Subtitle:</label>
+                        <input type="text" id="subtitleInput" placeholder="Enter subtitle..." maxlength="150">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="saveTitlesBtn" class="btn btn-success">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                    <button id="cancelTitlesBtn" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Presentation Modal -->
+        <div id="presentationModal" class="modal-overlay" style="display: none;">
+            <div class="modal-content presentation-modal">
+                <div class="modal-header">
+                    <h3><i class="fas fa-magic"></i> Presentation Mode</h3>
+                    <button id="closePresentationModal" class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+
+                    <div class="presentation-options">
+                        <div class="option-group">
+                            <h4><i class="fas fa-clock"></i> Animation Speed</h4>
+                            <div class="speed-controls">
+                                <label><input type="radio" name="speed" value="slow" checked> Slow (3s per country)</label>
+                                <label><input type="radio" name="speed" value="medium"> Medium (2s per country)</label>
+                                <label><input type="radio" name="speed" value="fast"> Fast (1s per country)</label>
+                            </div>
+                        </div>
+                        
+                        <div class="option-group">
+                            <h4><i class="fas fa-list"></i> Presentation Order</h4>
+                            <div class="order-controls">
+                                <label><input type="radio" name="order" value="alphabetical" checked> Alphabetical</label>
+                                <label><input type="radio" name="order" value="distance"> By Distance from Origin</label>
+                                <label><input type="radio" name="order" value="regions"> By Regions (Europe, Asia, Americas)</label>
+                            </div>
+                        </div>
+
+                        <div class="option-group">
+                            <h4><i class="fas fa-palette"></i> Visual Effects</h4>
+                            <div class="effects-controls">
+                                <label><input type="checkbox" id="showCountryNames" checked> Show Country Names</label>
+                                <label><input type="checkbox" id="animateLines" checked> Animate Connection Lines</label>
+                                <label><input type="checkbox" id="showStats" checked> Show Live Statistics</label>
+                                <label><input type="checkbox" id="pulseEffect" checked> Pulse Effect on New Countries</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="flex-direction: column; align-items: stretch;">
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
+                        <button id="startPresentationBtn" class="btn btn-success" style="flex: 1; min-width: 300px; padding: 20px; font-size: 18px;">
+                            <i class="fas fa-play" style="font-size: 20px;"></i> Watch Live Animation
+                            <small style="display: block; opacity: 0.8; font-size: 13px; margin-top: 4px;">See selected countries appear step-by-step</small>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Presentation Overlay -->
+        <div id="presentationOverlay" class="presentation-overlay" style="display: none;">
+            <div class="presentation-controls">
+                <button id="pausePresentationBtn" class="control-btn">
+                    <i class="fas fa-pause"></i>
+                </button>
+                <button id="stopPresentationBtn" class="control-btn">
+                    <i class="fas fa-stop"></i>
+                </button>
+                <span id="presentationStatus" class="status-text">Starting presentation...</span>
+            </div>
+            <div class="presentation-stats">
+                <div class="stat-item">
+                    <span class="stat-label">Countries Added:</span>
+                    <span id="countriesAdded" class="stat-value">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Total Coverage:</span>
+                    <span id="coveragePercent" class="stat-value">0%</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Current:</span>
+                    <span id="currentCountry" class="stat-value">Origin</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <div class="resize-handle"></div>
+            <div class="panel-section">
+                <h3><i class="fas fa-home"></i> Origin Country</h3>
+                <div class="origin-controls">
+                    <select id="originCountrySelect" class="origin-select">
+                        <!-- Countries will be populated here -->
+                    </select>
+                    <button id="changeOriginBtn" class="btn btn-info">Change Origin</button>
+                </div>
+            </div>
+            
+            <div class="panel-section">
+                <h3><i class="fas fa-plus-circle"></i> Select Delivery Countries</h3>
+                <div class="search-container">
+                    <input type="text" id="countrySearch" class="search-input" placeholder="Search countries...">
+                    <i class="fas fa-search search-icon"></i>
+                </div>
+                <div class="countries-container">
+                    <div id="countriesList" class="countries-list">
+                        <!-- Countries will be populated here -->
+                    </div>
+                </div>
+                <div class="selection-controls">
+                    <button id="addSelectedBtn" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add Selected (<span id="selectedCount">0</span>)
+                    </button>
+                    <div class="region-buttons">
+                        <button id="selectEuropeBtn" class="btn btn-region">
+                            <i class="fas fa-flag"></i> Europe
+                        </button>
+                        <button id="selectAsiaBtn" class="btn btn-region">
+                            <i class="fas fa-globe-asia"></i> Asia
+                        </button>
+                        <button id="selectAmericasBtn" class="btn btn-region">
+                            <i class="fas fa-globe-americas"></i> Americas
+                        </button>
+                        <button id="selectAfricaBtn" class="btn btn-region">
+                            <i class="fas fa-globe-africa"></i> Africa
+                        </button>
+                        <button id="selectOceaniaBtn" class="btn btn-region">
+                            <i class="fas fa-water"></i> Oceania
+                        </button>
+                        <button id="selectWorldBtn" class="btn btn-region">
+                            <i class="fas fa-globe"></i> World
+                        </button>
+                    </div>
+                    <button id="selectAllBtn" class="btn btn-secondary">
+                        <i class="fas fa-check-double"></i> Select All
+                    </button>
+                    <button id="clearSelectionBtn" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Clear Selection
+                    </button>
+                </div>
+            </div>
+            
+            <div class="panel-section">
+                <h3><i class="fas fa-list"></i> Active Delivery Points</h3>
+                <div id="deliveryList" class="delivery-list">
+                    <p class="no-deliveries">No delivery points added yet</p>
+                </div>
+            </div>
+            
+            <div class="panel-section">
+                <h3><i class="fas fa-cog"></i> Map Controls</h3>
+                <div class="controls">
+                    <button id="presentationBtn" class="btn btn-presentation">
+                        <i class="fas fa-play-circle"></i> Presentation Mode
+                    </button>
+                    <button id="fullscreenBtn" class="btn btn-fullscreen">
+                        <i class="fas fa-expand"></i> Full Screen
+                    </button>
+                    <button id="toggleLabelsBtn" class="btn btn-toggle">
+                        <i class="fas fa-tag"></i> Show Names
+                    </button>
+                    <button id="reorganizeBtn" class="btn btn-organize" style="display: none;">
+                        <i class="fas fa-random"></i> Reorganize Names
+                    </button>
+                    <div class="save-print-dropdown">
+                        <button id="saveDropdownBtn" class="btn btn-dropdown">
+                            <i class="fas fa-download"></i> Save & Print <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div id="saveDropdownMenu" class="dropdown-menu">
+                            <button id="saveMapBtn" class="dropdown-item">
+                                <i class="fas fa-file-pdf"></i> Save as PDF
+                            </button>
+                            <button id="saveJpgBtn" class="dropdown-item">
+                                <i class="fas fa-image"></i> Save as JPG
+                            </button>
+                            <button id="printMapBtn" class="dropdown-item">
+                                <i class="fas fa-print"></i> Print Map
+                            </button>
+                        </div>
+                    </div>
+                    <button id="clearAllBtn" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Clear All
+                    </button>
+                    <button id="resetViewBtn" class="btn btn-secondary">
+                        <i class="fas fa-home"></i> Reset View
+                    </button>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <h3><i class="fas fa-sliders-h"></i> Settings</h3>
+                <div class="settings">
+                    <label for="zoomThresholdInput" class="settings-label">Full name zoom threshold</label>
+                    <div class="settings-row">
+                        <input type="number" id="zoomThresholdInput" class="settings-input" min="2" max="12" step="0.25" value="4.25"/>
+                        <button id="applyZoomThresholdBtn" class="btn btn-primary" style="min-width:110px;">
+                            <i class="fas fa-check"></i> Apply
+                        </button>
+                        <button id="resetZoomThresholdBtn" class="btn btn-secondary" style="min-width:110px;">
+                            <i class="fas fa-undo"></i> Default
+                        </button>
+                    </div>
+                    <small class="settings-hint">Labels show abbreviations below the threshold and full names at or above it.</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Map Container -->
+        <div id="map" class="map-container"></div>
+
+        <!-- Stats Panel -->
+        <div class="stats-panel">
+            <div class="stat-item">
+                <span class="stat-label">Origin</span>
+                <span id="originCountryDisplay" class="stat-value">Select Origin</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Delivery</span>
+                <span id="deliveryCount" class="stat-value">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Coverage</span>
+                <span id="coverageArea" class="stat-value">0 countries</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JavaScript -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script src="script.js"></script>
+</body>
+</html>

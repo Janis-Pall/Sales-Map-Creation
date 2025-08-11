@@ -1,0 +1,49 @@
+{
+  "name": "company-delivery-map-creation",
+  "version": "1.0.0",
+  "description": "Interactive global supply chain visualization tool for mapping delivery networks and business connections",
+  "main": "index.html",
+  "keywords": [
+    "map",
+    "visualization",
+    "supply-chain",
+    "logistics",
+    "delivery",
+    "leaflet",
+    "interactive",
+    "presentation",
+    "export",
+    "countries"
+  ],
+  "author": "Company Delivery Map Creation",
+  "license": "MIT",
+  "homepage": "https://github.com/yourusername/delivery-map",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/delivery-map.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/delivery-map/issues"
+  },
+  "scripts": {
+    "start": "npx serve .",
+    "dev": "npx serve . --port 3000",
+    "lint": "npx jshint script.js",
+    "format": "npx prettier --write *.html *.css *.js *.md",
+    "validate": "npx html-validate index.html"
+  },
+  "devDependencies": {
+    "serve": "^14.0.0",
+    "jshint": "^2.13.0",
+    "prettier": "^3.0.0",
+    "html-validate": "^8.0.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ]
+}
